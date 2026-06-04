@@ -15,7 +15,7 @@ The `grpc-gateway-client` is a high quality REST client generator for [gRPC](htt
 1. Install `grpc-gateway-client`:
 
     ```bash
-    $ go install github.com/akuity/grpc-gateway-client/protoc-gen-grpc-gateway-client@latest
+    $ go install github.com/krestkrest/grpc-gateway-client/protoc-gen-grpc-gateway-client@latest
     ```
 1. Add plugin in your buf.gen.yaml:
 

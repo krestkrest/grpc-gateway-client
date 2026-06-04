@@ -3,16 +3,15 @@ package server
 import (
 	"bytes"
 	"context"
+	_ "embed"
 	"encoding/base64"
+	"fmt"
 	"time"
 
-	"github.com/bufbuild/protoyaml-go"
 	"google.golang.org/genproto/googleapis/api/httpbody"
 
-	"github.com/akuity/grpc-gateway-client/internal/assets"
-	"github.com/akuity/grpc-gateway-client/internal/test/gen/testv1"
-
-	_ "embed"
+	"github.com/krestkrest/grpc-gateway-client/internal/assets"
+	"github.com/krestkrest/grpc-gateway-client/internal/test/gen/testv1"
 )
 
 type testServiceServer struct {
@@ -65,12 +64,8 @@ func (s *testServiceServer) DownloadInvitations(req *testv1.DownloadInvitationsR
 	}
 	for _, invitation := range invitations {
 		var buf bytes.Buffer
-		data, err := protoyaml.Marshal(invitation)
-		if err != nil {
-			return err
-		}
 		_, _ = buf.WriteString("---\n")
-		_, _ = buf.Write(data)
+		_, _ = buf.WriteString(fmt.Sprintf("id: %s\n", invitation.Id))
 		_ = srv.Send(&httpbody.HttpBody{
 			ContentType: "application/yaml",
 			Data:        buf.Bytes(),

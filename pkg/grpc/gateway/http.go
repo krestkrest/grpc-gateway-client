@@ -6,7 +6,7 @@ import (
 
 	"google.golang.org/grpc/codes"
 
-	"github.com/akuity/grpc-gateway-client/pkg/http/roundtripper"
+	"github.com/krestkrest/grpc-gateway-client/pkg/http/roundtripper"
 )
 
 func setSkipTLSVerify(hc *http.Client, skip bool) {

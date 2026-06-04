@@ -3,6 +3,7 @@ package gateway_test
 import (
 	"bytes"
 	"context"
+	_ "embed"
 	"net"
 	"net/http"
 	"net/http/httptest"
@@ -10,7 +11,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/bufbuild/protoyaml-go"
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
@@ -22,12 +22,10 @@ import (
 	"google.golang.org/grpc/test/bufconn"
 	"google.golang.org/protobuf/proto"
 
-	"github.com/akuity/grpc-gateway-client/internal/assets"
-	"github.com/akuity/grpc-gateway-client/internal/test/gen/testv1"
-	"github.com/akuity/grpc-gateway-client/internal/test/server"
-	"github.com/akuity/grpc-gateway-client/pkg/grpc/gateway"
-
-	_ "embed"
+	"github.com/krestkrest/grpc-gateway-client/internal/assets"
+	"github.com/krestkrest/grpc-gateway-client/internal/test/gen/testv1"
+	"github.com/krestkrest/grpc-gateway-client/internal/test/server"
+	"github.com/krestkrest/grpc-gateway-client/pkg/grpc/gateway"
 )
 
 type RequestTestSuite struct {
@@ -127,8 +125,7 @@ read:
 			continue
 		}
 
-		invitation := &testv1.Invitation{}
-		s.Require().NoError(protoyaml.Unmarshal([]byte(data), invitation))
+		invitation := mustUnmarshalInvitation(s.T(), data)
 		actual = append(actual, invitation)
 	}
 	expected := []*testv1.Invitation{
@@ -184,6 +181,17 @@ func (s *RequestTestSuite) TestDownloadRequest_Error() {
 	stat, ok := status.FromError(err)
 	s.Require().True(ok)
 	s.Require().Equal(codes.InvalidArgument, stat.Code())
+}
+
+func mustUnmarshalInvitation(tb testing.TB, in string) *testv1.Invitation {
+	tb.Helper()
+
+	id, ok := strings.CutPrefix(in, "id: ")
+	require.True(tb, ok)
+
+	return &testv1.Invitation{
+		Id: strings.TrimSpace(id),
+	}
 }
 
 func (s *RequestTestSuite) TearDownTest() {
