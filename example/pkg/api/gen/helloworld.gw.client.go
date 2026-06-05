@@ -7,6 +7,7 @@ import (
 	context "context"
 	fmt "fmt"
 	gateway "github.com/krestkrest/grpc-gateway-client/pkg/grpc/gateway"
+	grpc "google.golang.org/grpc"
 	url "net/url"
 )
 
@@ -27,6 +28,24 @@ type greeterGatewayClient struct {
 }
 
 func (c *greeterGatewayClient) SayHello(ctx context.Context, req *HelloRequest) (*HelloReply, error) {
+	gwReq := c.gwc.NewRequest("GET", "/v1/example/echo")
+	q := url.Values{}
+	q.Add("name", fmt.Sprintf("%v", req.Name))
+	gwReq.SetQueryParamsFromValues(q)
+	return gateway.DoRequest[HelloReply](ctx, gwReq)
+}
+
+func NewGreeterGatewayClientGRPCCompatible(c gateway.Client) *GreeterGatewayClientGRPCCompatible {
+	return &GreeterGatewayClientGRPCCompatible{
+		gwc: c,
+	}
+}
+
+type GreeterGatewayClientGRPCCompatible struct {
+	gwc gateway.Client
+}
+
+func (c *GreeterGatewayClientGRPCCompatible) SayHello(ctx context.Context, req *HelloRequest, _ ...grpc.CallOption) (*HelloReply, error) {
 	gwReq := c.gwc.NewRequest("GET", "/v1/example/echo")
 	q := url.Values{}
 	q.Add("name", fmt.Sprintf("%v", req.Name))

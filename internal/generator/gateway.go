@@ -27,6 +27,10 @@ func getClientStructName(svc *protogen.Service) string {
 	return unexport(getClientInterfaceName(svc))
 }
 
+func getClientStructNameGRPCCompatible(svc *protogen.Service) string {
+	return getClientInterfaceName(svc) + "GRPCCompatible"
+}
+
 type HTTPRule struct {
 	Method  string
 	Pattern string

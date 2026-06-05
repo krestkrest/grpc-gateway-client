@@ -28,6 +28,11 @@ var (
 	pkgWrapperspb      = protogen.GoImportPath("google.golang.org/protobuf/types/known/wrapperspb")
 )
 
+// grpc package
+var (
+	pkgGRPC = protogen.GoImportPath("google.golang.org/grpc")
+)
+
 func getMessageIdentifier(msg *protogen.Message) protogen.GoIdent {
 	switch msg.Location.SourceFile {
 	case "google/protobuf/any.proto":

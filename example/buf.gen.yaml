@@ -8,15 +8,18 @@ managed:
       - buf.build/grpc-ecosystem/grpc-gateway
 
 plugins:
-  - remote: buf.build/library/plugins/go:v1.27.1-1
+  - plugin: go
+    path: [ "../bin/protoc-gen-go" ]
     out: pkg/api/gen
     opt:
       - paths=source_relative
-  - remote: buf.build/library/plugins/go-grpc:v1.1.0-2
+  - plugin: go-grpc
+    path: [ "../bin/protoc-gen-go-grpc" ]
     out: pkg/api/gen
     opt:
       - paths=source_relative
-  - remote: buf.build/grpc-ecosystem/plugins/grpc-gateway:v2.11.2-1
+  - plugin: grpc-gateway
+    path: [ "../bin/protoc-gen-grpc-gateway" ]
     out: pkg/api/gen
     opt:
       - paths=source_relative

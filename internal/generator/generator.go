@@ -2,6 +2,7 @@ package generator
 
 import (
 	"fmt"
+
 	"google.golang.org/protobuf/compiler/protogen"
 	"google.golang.org/protobuf/types/pluginpb"
 )
@@ -27,6 +28,10 @@ func Generate(p *protogen.Plugin, file *protogen.File) (*protogen.GeneratedFile,
 		generateClientConstructor(g, svc)
 		g.P()
 		generateClientStruct(g, svc)
+		g.P()
+		generateClientConstructorGRPCCompatible(g, svc)
+		g.P()
+		generateClientStructGRPCCompatible(g, svc)
 	}
 	return g, nil
 }
@@ -106,6 +111,49 @@ func generateUnaryMethod(g *protogen.GeneratedFile, receiverName string, m *prot
 	// func (c *client) UnaryMethod(ctx context.Context, req *Request) (*Response, error) {"
 	g.P("func (c *", receiverName, ") ",
 		m.GoName, "(ctx ", pkgContext.Ident("Context"), ", req *", getMessageIdentifier(m.Input), ") ",
+		"(", rpcUnaryReturnType, getMessageIdentifier(m.Output), ", error) {")
+	defer g.P("}")
+
+	generateParamValues(g, m)
+	g.P("return ",
+		pkgGatewayClient.Ident("DoRequest"), "[", getMessageIdentifier(m.Output), "](ctx, gwReq)")
+}
+
+func generateClientConstructorGRPCCompatible(g *protogen.GeneratedFile, svc *protogen.Service) {
+	structName := getClientStructNameGRPCCompatible(svc)
+	g.P("func New", structName, "(c ", pkgGatewayClient.Ident("Client"), ") *", structName, " {")
+	defer g.P("}")
+
+	g.P("return &", structName, " {")
+	defer g.P("}")
+
+	g.P("gwc: c,")
+}
+
+func generateClientStructGRPCCompatible(g *protogen.GeneratedFile, svc *protogen.Service) {
+	structName := getClientStructNameGRPCCompatible(svc)
+	g.P("type ", structName, " struct {")
+	g.P("gwc ", pkgGatewayClient.Ident("Client"))
+	g.P("}")
+	g.P()
+
+	for _, method := range svc.Methods {
+		if !isGatewayCompatibleMethod(method) {
+			continue
+		}
+
+		if !method.Desc.IsStreamingServer() {
+			generateUnaryMethodGRPCCompatible(g, structName, method)
+		}
+		g.P()
+	}
+}
+
+func generateUnaryMethodGRPCCompatible(g *protogen.GeneratedFile, receiverName string, m *protogen.Method) {
+	// func (c *client) UnaryMethod(ctx context.Context, req *Request, opts ...grpc.CallOption) (*Response, error) {"
+	g.P("func (c *", receiverName, ") ",
+		m.GoName, "(ctx ", pkgContext.Ident("Context"), ", req *", getMessageIdentifier(m.Input),
+		", _ ...", pkgGRPC.Ident("CallOption"), ") ",
 		"(", rpcUnaryReturnType, getMessageIdentifier(m.Output), ", error) {")
 	defer g.P("}")
 

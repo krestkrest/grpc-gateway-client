@@ -8,6 +8,7 @@ import (
 	fmt "fmt"
 	gateway "github.com/krestkrest/grpc-gateway-client/pkg/grpc/gateway"
 	httpbody "google.golang.org/genproto/googleapis/api/httpbody"
+	grpc "google.golang.org/grpc"
 	url "net/url"
 )
 
@@ -71,4 +72,31 @@ func (c *testServiceGatewayClient) DownloadInvitations(ctx context.Context, req 
 func (c *testServiceGatewayClient) DownloadLargeFile(ctx context.Context, req *DownloadLargeFileRequest) (<-chan *httpbody.HttpBody, <-chan error, error) {
 	gwReq := c.gwc.NewRequest("GET", "/download-large-file")
 	return gateway.DoStreamingRequest[httpbody.HttpBody](ctx, c.gwc, gwReq)
+}
+
+func NewTestServiceGatewayClientGRPCCompatible(c gateway.Client) *TestServiceGatewayClientGRPCCompatible {
+	return &TestServiceGatewayClientGRPCCompatible{
+		gwc: c,
+	}
+}
+
+type TestServiceGatewayClientGRPCCompatible struct {
+	gwc gateway.Client
+}
+
+func (c *TestServiceGatewayClientGRPCCompatible) ListInvitations(ctx context.Context, req *ListInvitationsRequest, _ ...grpc.CallOption) (*ListInvitationsResponse, error) {
+	gwReq := c.gwc.NewRequest("GET", "/invitations")
+	q := url.Values{}
+	for k, v := range req.Query.Labels {
+		key := fmt.Sprintf("query.labels[%v]", k)
+		q.Add(key, fmt.Sprintf("%v", v))
+	}
+	gwReq.SetQueryParamsFromValues(q)
+	return gateway.DoRequest[ListInvitationsResponse](ctx, gwReq)
+}
+
+func (c *TestServiceGatewayClientGRPCCompatible) SendInvitation(ctx context.Context, req *SendInvitationRequest, _ ...grpc.CallOption) (*SendInvitationResponse, error) {
+	gwReq := c.gwc.NewRequest("POST", "/invitation")
+	gwReq.SetBody(req)
+	return gateway.DoRequest[SendInvitationResponse](ctx, gwReq)
 }
